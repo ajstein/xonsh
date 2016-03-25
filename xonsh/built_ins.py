@@ -26,7 +26,7 @@ from xonsh.inspectors import Inspector
 from xonsh.environ import Env, default_env, locate_binary
 from xonsh.aliases import DEFAULT_ALIASES
 from xonsh.jobs import add_job, wait_for_active_job
-from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy, 
+from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
     SimpleForegroundProcProxy,TeePTYProc)
 from xonsh.history import History
 from xonsh.foreign_shells import load_foreign_aliases
@@ -603,6 +603,12 @@ def run_subproc(cmds, captured=True):
             proc.stdout.close()
         except OSError:
             pass
+    if ENV.get('XONSH_INTERACTIVE') and not ENV.get('XONSH_STORE_STDOUT'):
+        # set title here to get current command running
+        try:
+            builtins.__xonsh_shell__.settitle()
+        except AttributeError:
+            pass
     if not prev_is_proxy:
         add_job({
             'cmds': cmds,
@@ -610,12 +616,6 @@ def run_subproc(cmds, captured=True):
             'obj': prev_proc,
             'bg': background
         })
-    if ENV.get('XONSH_INTERACTIVE') and not ENV.get('XONSH_STORE_STDOUT'):
-        # set title here to get current command running
-        try:
-            builtins.__xonsh_shell__.settitle()
-        except AttributeError:
-            pass
     if background:
         return
     if prev_is_proxy:
